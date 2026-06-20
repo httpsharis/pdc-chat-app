@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@layer base {
+  /* LIGHT MODE: Warm Sand / Skin Tones */
+  :root {
+    --color-base: #FDF8F5;       /* Very light warm background */
+    --color-surface: #F3EAE3;    /* Slightly darker for sidebars/cards */
+    --color-border: #E6D8CE;     /* Subtle division lines */
+    --color-text-main: #2A2421;  /* Soft black/brown for readability */
+    --color-text-muted: #73675F; /* Secondary text */
+    --color-accent: #D48C70;     /* Warm terracotta for buttons/active states */
+    --color-accent-hover: #BF785D;
+  }
+
+  /* DARK MODE: Midnight Black */
+  .dark {
+    --color-base: #030303;       /* Pure midnight */
+    --color-surface: #0F0F0F;    /* Elevated surface */
+    --color-border: #1F1F1F;     /* Barely visible borders */
+    --color-text-main: #F3F4F6;  /* Crisp white */
+    --color-text-muted: #A1A1AA; /* Dimmed text */
+    --color-accent: #6366F1;     /* Keeping your original violet for dark mode pop */
+    --color-accent-hover: #4F46E5;
+  }
+
+  /* Global Resets */
+  body {
+    @apply bg-[var(--color-base)] text-[var(--color-text-main)] transition-colors duration-200 antialiased;
+  }
+}
