@@ -56,6 +56,10 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
                 writer.write(f"MSG {data['text']}\n".encode('utf-8'))
             elif data["action"] == "LEAVE":
                 writer.write(b"LEAVE\n")
+            elif data["action"] == "TYPING":
+                writer.write(f"TYPING {data['room']}\n".encode('utf-8'))
+            elif data["action"] == "RAW":
+                writer.write(f"{data['text']}\n".encode('utf-8'))
             
             await writer.drain()
 

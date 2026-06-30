@@ -209,14 +209,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     [saveContact, username],
   );
 
-  // Main WebSocket Connection Hook
+    // Main WebSocket Connection Hook
   useEffect(() => {
     if (!username) return;
 
     disconnectReasonRef.current = "unknown";
     let isActive = true;
 
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/${username}`);
+    const ws = new WebSocket(`ws://${window.location.hostname}:8000/ws/${username}`);
     wsRef.current = ws;
 
     let pingInterval: ReturnType<typeof setInterval> | null = null;
@@ -235,7 +235,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       if (connectTimeout) clearTimeout(connectTimeout);
       setIsConnected(true);
       setIsReconnecting(false);
-      reconnectAttemptRef.current = 0; // Reset backoff on successful connection
+      reconnectAttemptRef.current = 0;
       setError(null);
 
       pingInterval = setInterval(() => {
@@ -244,7 +244,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }, 5000);
 
-      fetch("http://127.0.0.1:8000/api/rooms")
+      fetch(`http://${window.location.hostname}:8000/api/rooms`)
         .then((res) => res.json())
         .then((data) => {
           if (!isActive) return;
@@ -308,15 +308,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       switch (reason) {
-        case "intentional_logout":
+        case "intentional_logout": {
           setUsername(null);
           setActiveRoom(null);
           setMessages([]);
           setIsReconnecting(false);
           setError(null);
           break;
+        }
 
-        case "username_taken":
+        case "username_taken": {
           setUsername(null);
           setActiveRoom(null);
           setMessages([]);
@@ -324,19 +325,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
           setError("username_taken");
           localStorage.removeItem("chat_username");
           break;
+        }
 
-        case "network_error":
-        case "server_error":
-        case "disconnected":
-        default:
+        default: {
           // AUTO-RECONNECT LOGIC
           setIsReconnecting(true);
           const attempt = reconnectAttemptRef.current;
           const backoff = Math.min(1000 * Math.pow(1.5, attempt), 10000);
 
           setTimeout(() => {
-            // Force a re-render by toggling username. 
-            // Since we don't clear localStorage, it stays in the input if it fully fails.
             const currentName = username;
             setUsername(null);
             setTimeout(() => {
@@ -345,6 +342,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
             reconnectAttemptRef.current += 1;
           }, backoff);
           break;
+        }
       }
     };
 
@@ -365,7 +363,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     let isActive = true;
 
     const fetchUsers = () => {
-      fetch("http://127.0.0.1:8000/api/users")
+      fetch(`http://${window.location.hostname}:8000/api/users`)
         .then((res) => res.json())
         .then((data) => {
           if (!isActive) return;
@@ -395,7 +393,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
 
     let isActive = true;
 
-    fetch("http://127.0.0.1:8000/api/all_users")
+    fetch(`http://${window.location.hostname}:8000/api/all_users`)
       .then((res) => res.json())
       .then((data) => {
         if (!isActive) return;
@@ -450,7 +448,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!username) return;
     const dmRoom = `DM:${[username, targetUser].sort().join(":")}`;
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/history/${dmRoom}`);
+      const res = await fetch(`http://${window.location.hostname}:8000/api/history/${dmRoom}`);
       const data = await res.json();
       if (data.history) {
         setMessages(

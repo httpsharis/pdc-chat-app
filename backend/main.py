@@ -28,7 +28,7 @@ def run_fastapi_bridge():
     """Runs the modern web server in the main thread."""
     logging.info("Initializing FastAPI Bridge on port 8000...")
     # uvicorn.run blocks the main thread, keeping the application alive
-    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
 
 
 if __name__ == "__main__":
