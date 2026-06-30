@@ -1,6 +1,11 @@
 import threading
 import uvicorn
 import logging
+import sys
+import os
+
+# Ensure the root directory is in the python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the TCP Server from your engine module
 from backend.engine.tcp_server import start_tcp_server

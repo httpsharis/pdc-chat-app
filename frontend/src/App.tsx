@@ -6,9 +6,9 @@ import { ChatLayout } from './components/chat/ChatLayout';
 
 // This component decides which screen to show
 const MainView: React.FC = () => {
-  const { username, isConnected } = useChat();
+  const { username, isConnected, isReconnecting } = useChat();
   
-  if (username && isConnected) {
+  if (username && (isConnected || isReconnecting)) {
     return <ChatLayout />;
   }
   

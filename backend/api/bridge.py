@@ -65,5 +65,10 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
         print(f"Bridge Error: {e}")
     finally:
         # Clean up the internal connection
-        writer.close()
-        await writer.wait_closed()
+        try:
+            if 'tcp_listener_task' in locals():
+                tcp_listener_task.cancel()
+            writer.close()
+            await writer.wait_closed()
+        except Exception:
+            pass

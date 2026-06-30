@@ -20,6 +20,7 @@ app.add_middleware(
 # Attach the REST endpoints from rest.py
 app.include_router(rest_router)
 
+
 @app.websocket("/ws/{username}")
 async def websocket_endpoint(websocket: WebSocket, username: str):
     """Bridges the React frontend to the raw TCP networking engine."""
@@ -41,7 +42,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
                     break
                 # Forward the raw server output as JSON
                 await websocket.send_json({
-                    "type": "message", 
+                    "type": "message",
                     "content": data.decode('utf-8').strip()
                 })
 
@@ -51,7 +52,7 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
         while True:
             data = await websocket.receive_json()
             action = data.get("action")
-            
+
             if action == "JOIN":
                 writer.write(f"JOIN {data['room']}\n".encode('utf-8'))
             elif action == "MSG":
@@ -64,7 +65,11 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
                 writer.write(b"TYPING \n")
             elif action == "LEAVE":
                 writer.write(b"LEAVE\n")
-            
+            elif action == "TYPING":
+                room = data.get("room", "")
+                if room:
+                    writer.sendall(f"TYPING {room}\n".encode('utf-8'))
+
             await writer.drain()
 
     except WebSocketDisconnect:
@@ -74,6 +79,8 @@ async def websocket_endpoint(websocket: WebSocket, username: str):
     finally:
         # Clean up the internal TCP connection
         try:
+            if 'tcp_task' in locals():
+                tcp_task.cancel()
             writer.close()
             await writer.wait_closed()
         except Exception:

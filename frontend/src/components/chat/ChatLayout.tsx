@@ -5,10 +5,10 @@ import { MessageInput } from './MessageInput';
 import { useChat } from '../../hooks/useChat';
 
 export const ChatLayout: React.FC = () => {
-  const { activeRoom, contacts, toggleFavorite, sendMessage } = useChat();
+  const { activeRoom, contacts, toggleFavorite, sendMessage, isConnected, isReconnecting } = useChat();
 
   const isDM = activeRoom?.startsWith('@');
-  const targetUser = isDM ? activeRoom.slice(1) : null;
+  const targetUser = isDM ? activeRoom?.slice(1) : null;
   const targetContact = isDM ? contacts.find(c => c.username === targetUser) : null;
 
   return (
@@ -68,6 +68,14 @@ export const ChatLayout: React.FC = () => {
         {/* Input Area */}
         <MessageInput />
         
+        {/* Reconnecting Overlay */}
+        {!isConnected && isReconnecting && (
+          <div className="absolute inset-0 z-50 bg-[var(--color-base)]/80 backdrop-blur-sm flex flex-col items-center justify-center">
+            <div className="w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin mb-4"></div>
+            <h2 className="text-xl font-semibold text-[var(--color-text-main)]">Reconnecting...</h2>
+            <p className="text-[var(--color-text-muted)] mt-2">Waiting for network</p>
+          </div>
+        )}
       </main>
     </div>
   );

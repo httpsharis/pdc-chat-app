@@ -33,4 +33,6 @@ export interface ChatContextType {
   sendDM: (user: string, text: string) => void;
   login: (username: string) => void;
   logout: () => void;
+  typingUsers: Record<string, string[]>;
+  sendTyping: (room: string) => void;
 }

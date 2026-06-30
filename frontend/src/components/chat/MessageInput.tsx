@@ -1,66 +1,68 @@
-import React, { useState } from 'react';
-import { useChat } from '../../hooks/useChat';
-import { Button } from '../ui/Button';
+import React, { useState, useRef } from "react";
+import { useChat } from "../../hooks/useChat";
 
 export const MessageInput: React.FC = () => {
-  const [text, setText] = useState('');
-  const { sendMessage, sendDM, activeRoom, joinRoom } = useChat();
+  const [text, setText] = useState("");
+  const { sendMessage, activeRoom, sendTyping } = useChat();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+
+    // Only send typing indicators for public rooms, not DMs
+    if (!activeRoom || activeRoom.startsWith("@")) return;
+
+    // Debounce: only send TYPING event if user hasn't typed for 500ms
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTyping(activeRoom);
+    }, 500);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim()) return;
-
-    if (text.startsWith('/join ')) {
-      const newRoom = text.split(' ')[1];
-      if (newRoom) joinRoom(newRoom);
-    } else if (text.startsWith('/dm ')) {
-      const parts = text.split(' ');
-      if (parts.length >= 3) {
-        const targetUser = parts[1];
-        const msg = parts.slice(2).join(' ');
-        sendDM(targetUser, msg);
-      }
-    } else if (activeRoom && activeRoom.startsWith('@')) {
-      // Smart routing: Send as DM if in a private chat tab
-      const targetUser = activeRoom.slice(1);
-      sendDM(targetUser, text.trim());
-    } else {
-      // Standard public message
+    if (text.trim()) {
       sendMessage(text.trim());
+      setText("");
     }
-
-    setText('');
   };
 
-  const isDisabled = !activeRoom && !text.startsWith('/');
-
-  // Update placeholder to show exactly who you are talking to
-  const placeholderText = activeRoom?.startsWith('@')
-    ? `Message ${activeRoom.slice(1)}...`
-    : isDisabled
-      ? "Type /join general to start..."
-      : `Message #${activeRoom}...`;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
 
   return (
-    <div className="p-4 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
-      <form onSubmit={handleSubmit} className="flex space-x-3">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={placeholderText}
-          className="flex-1 bg-[var(--color-base)] border border-[var(--color-border)] text-[var(--color-text-main)] placeholder-[var(--color-text-muted)] rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition-colors shadow-sm"
-        />
-
-        <Button
+    <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-surface)]">
+      <form onSubmit={handleSubmit} className="flex items-end gap-3">
+        <div className="flex-1 relative">
+          <textarea
+            value={text}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            rows={1}
+            className="w-full resize-none rounded-xl bg-[var(--color-base)] border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-text-main)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)] transition-all"
+            style={{ maxHeight: "120px", minHeight: "48px" }}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = "auto";
+              target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+            }}
+          />
+        </div>
+        <button
           type="submit"
           disabled={!text.trim()}
-          className="px-6 rounded-xl shadow-sm"
+          className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19V6m0 0l-8 8m8-8l8 8" />
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
           </svg>
-        </Button>
+        </button>
       </form>
     </div>
   );
